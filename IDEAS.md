@@ -2,6 +2,8 @@
 
 ## TUI Session Manager
 
+A tmux wrapper that serves as the main engine for running parallel Claude Code agents. A persistent window shows all active agent sessions in a left panel — each entry displays the session name, current status indicator, and live token/dollar usage. Navigate between sessions with arrow keys. The right panel shows a preview of the selected session's output; press a key to fully expand into that session and another to return to the overview. Wraps tmux under the hood, managing pane creation, attachment, and status polling automatically.
+
 ## Shell Config + Bootstrap.sh
 
 ## Task Tracker
