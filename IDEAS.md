@@ -6,6 +6,8 @@ A tmux wrapper that serves as the main engine for running parallel Claude Code a
 
 ## Shell Config + Bootstrap.sh
 
+A `.aliases` file (or similar) containing all personal shell shortcuts: launching new Claude Code sessions with `--dangerously-skip-permissions`, and variants for resuming, continuing, or starting fresh sessions. Also houses git aliases and other workflow shortcuts. Alongside it, a single `bootstrap.sh` at the root of this repo — since every tool lives as a subdirectory here, this script is the one-stop setup for a new machine: installs dependencies, symlinks configs, and initializes all the projects in one run.
+
 ## Task Tracker
 
 ## DAG Orchestrator
