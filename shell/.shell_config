@@ -1,4 +1,5 @@
 # Environment variables
+[ -f "$HOME/.config/personal-tooling/config" ] && . "$HOME/.config/personal-tooling/config"
 
 # aimux aliases
 

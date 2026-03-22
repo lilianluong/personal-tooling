@@ -58,9 +58,41 @@ install_pkg() {
   fi
 }
 
+# ── user config ──────────────────────────────────────────────────────────────
+
+echo "Setting up user config..."
+
+CONFIG_FILE="$HOME/.config/personal-tooling/config"
+if [ -f "$CONFIG_FILE" ]; then
+  yellow "  already exists: $CONFIG_FILE"
+else
+  mkdir -p "$(dirname "$CONFIG_FILE")"
+  printf 'Enter your name for git branch prefixes (default: lilian): '
+  read -r input_user
+  tooling_user="${input_user:-lilian}"
+  printf 'TOOLING_USER=%s\n' "$tooling_user" > "$CONFIG_FILE"
+  green "  created: $CONFIG_FILE (TOOLING_USER=$tooling_user)"
+fi
+
+echo ""
+
 echo "Installing packages..."
 
 install_pkg tmux
+
+if command -v git-branchless &>/dev/null; then
+  yellow "  already installed: git-branchless"
+else
+  echo "  installing git-branchless..."
+  if command -v brew &>/dev/null; then
+    brew install git-branchless
+  elif command -v cargo &>/dev/null; then
+    cargo install git-branchless
+  else
+    yellow "  install git-branchless manually: https://github.com/arxanas/git-branchless"
+  fi
+  green "  installed: git-branchless"
+fi
 
 if command -v claude &>/dev/null; then
   yellow "  already installed: claude"
