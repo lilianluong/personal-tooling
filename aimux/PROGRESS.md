@@ -5,7 +5,7 @@
 | # | Branch | Status | Notes |
 |---|---|---|---|
 | 1 | `aimux/scaffold` | ✅ done | Project structure, empty Textual app, setup.sh |
-| 2 | `aimux/state` | ⬜ todo | State storage: sessions.json + per-session JSON |
+| 2 | `aimux/state` | ✅ done | State storage: sessions.json + per-session JSON |
 | 3 | `aimux/tmux-backend` | ⬜ todo | tmux server lifecycle, Alt+d/z/x keybindings |
 | 4 | `aimux/hooks` | ⬜ todo | Claude Code hooks writing to state |
 | 5 | `aimux/discovery` | ⬜ todo | Git repo + worktree auto-discovery under ~ |
