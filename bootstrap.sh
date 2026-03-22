@@ -152,4 +152,11 @@ EOF
 green "  configured statusLine in $CLAUDE_SETTINGS"
 
 echo ""
+
+# ── aimux ─────────────────────────────────────────────────────────────────────
+
+echo "Setting up aimux..."
+bash "$REPO_DIR/aimux/setup.sh"
+echo ""
+
 green "Done. Restart your shell or run: source ~/.shell_config"

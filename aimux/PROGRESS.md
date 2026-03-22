@@ -13,7 +13,7 @@
 | 7 | `aimux/new-session` | ✅ done | n hotkey: workspace picker + spawn claude |
 | 8 | `aimux/kill` | ✅ done | k hotkey: kill with confirmation |
 | 9 | `aimux/tui-detail` | ✅ done | Right panel: pane preview, cost, git status |
-| 10 | `aimux/bootstrap-wire` | ⬜ todo | Wire setup.sh into bootstrap.sh |
+| 10 | `aimux/bootstrap-wire` | ✅ done | Wire setup.sh into bootstrap.sh + README |
 
 ## Current: Commit 1 — scaffold
 
