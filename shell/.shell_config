@@ -1,0 +1,23 @@
+# Environment variables
+
+# aimux aliases
+
+# Claude Code aliases
+alias cdn='claude --dangerously-skip-permissions'
+alias cdr='claude --dangerously-skip-permissions --resume'
+alias cdc='claude --dangerously-skip-permissions --continue'
+
+# Git aliases
+alias gk='git checkout'
+alias gs='git status'
+alias gd='git diff'
+alias gds='git diff --staged'
+alias gl='git log --graph --pretty='\''%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset'\'
+alias gcm='git commit -m'
+alias gcp='git cherry-pick'
+alias gpl='git pull --rebase origin HEAD'
+alias grb='git rebase'
+
+# Miscellaneous
+alias space='df -h'
+
