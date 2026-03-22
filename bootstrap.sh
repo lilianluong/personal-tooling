@@ -133,5 +133,23 @@ while IFS= read -r -d '' src; do
   symlink "$src" "$dst"
 done < <(find "$REPO_DIR/claude" -type f -print0)
 
+# Configure statusline in ~/.claude/settings.json (not symlinked — merged in place)
+CLAUDE_SETTINGS="$HOME/.claude/settings.json"
+mkdir -p "$(dirname "$CLAUDE_SETTINGS")"
+if [ ! -f "$CLAUDE_SETTINGS" ]; then
+  echo '{}' > "$CLAUDE_SETTINGS"
+fi
+python3 - "$CLAUDE_SETTINGS" <<'EOF'
+import json, sys
+path = sys.argv[1]
+with open(path) as f:
+    s = json.load(f)
+s['statusLine'] = {'type': 'command', 'command': 'bash ~/.claude/statusline-command.sh'}
+with open(path, 'w') as f:
+    json.dump(s, f, indent=2)
+    f.write('\n')
+EOF
+green "  configured statusLine in $CLAUDE_SETTINGS"
+
 echo ""
 green "Done. Restart your shell or run: source ~/.shell_config"

@@ -15,12 +15,7 @@ cd ~/personal-tooling
 bash bootstrap.sh
 ```
 
-The script will:
-
-1. Install **tmux** (via `apt` on Linux, `brew` on macOS)
-2. Install **Claude Code** (via the official installer)
-3. Symlink `shell/dev_tooling` to `~/.dev_tooling`
-4. Add a source line to `~/.zshrc` and/or `~/.bashrc` if they exist
+Run this once to set up all tools.
 
 ## Compatibility
 
