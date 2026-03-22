@@ -11,7 +11,7 @@
 | 5 | `aimux/discovery` | ✅ done | Git repo + worktree auto-discovery under ~ |
 | 6 | `aimux/tui-list` | ✅ done | Top bar + workspace-grouped session list |
 | 7 | `aimux/new-session` | ✅ done | n hotkey: workspace picker + spawn claude |
-| 8 | `aimux/kill` | ⬜ todo | k hotkey: kill with confirmation |
+| 8 | `aimux/kill` | ✅ done | k hotkey: kill with confirmation |
 | 9 | `aimux/tui-detail` | ⬜ todo | Right panel: pane preview, cost, git status |
 | 10 | `aimux/bootstrap-wire` | ⬜ todo | Wire setup.sh into bootstrap.sh |
 

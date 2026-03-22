@@ -15,8 +15,10 @@ from aimux.state import (
     get_session_state,
     list_sessions,
     register_session,
+    remove_session,
 )
-from aimux.tmux import attach_session, create_session, ensure_server, send_keys
+from aimux.tmux import attach_session, create_session, ensure_server, kill_session, send_keys
+from aimux.widgets.confirm_kill import ConfirmKill
 from aimux.widgets.new_session import SessionNamePrompt, WorkspacePicker
 from aimux.widgets.session_list import SessionList
 
@@ -182,5 +184,19 @@ class AimuxApp(App):
             pass
 
     def action_kill_session(self) -> None:
-        # Implemented in aimux/kill commit
-        self.notify("Kill: coming soon!", severity="information")
+        try:
+            sl = self.query_one(SessionList)
+            info = sl.get_selected_session()
+        except Exception:
+            info = None
+
+        if not info:
+            return
+
+        def _on_confirm(confirmed: bool) -> None:
+            if confirmed:
+                kill_session(info.id)
+                remove_session(info.id)
+                self._refresh_state()
+
+        self.push_screen(ConfirmKill(info.name), _on_confirm)
