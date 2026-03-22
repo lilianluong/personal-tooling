@@ -88,4 +88,18 @@ for rc in "$HOME/.zshrc" "$HOME/.bashrc"; do
 done
 
 echo ""
+
+# ── claude config ─────────────────────────────────────────────────────────────
+
+echo "Setting up Claude config..."
+
+# Mirror claude/ into ~/.claude/, symlinking each file at its relative path
+while IFS= read -r -d '' src; do
+  rel="${src#"$REPO_DIR/claude/"}"
+  dst="$HOME/.claude/$rel"
+  mkdir -p "$(dirname "$dst")"
+  symlink "$src" "$dst"
+done < <(find "$REPO_DIR/claude" -type f -print0)
+
+echo ""
 green "Done. Restart your shell or run: source ~/.shell_config"
