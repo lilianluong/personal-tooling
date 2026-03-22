@@ -8,7 +8,7 @@
 | 2 | `aimux/state` | ✅ done | State storage: sessions.json + per-session JSON |
 | 3 | `aimux/tmux-backend` | ✅ done | tmux server lifecycle, Alt+d/z/x keybindings |
 | 4 | `aimux/hooks` | ✅ done | Claude Code hooks writing to state |
-| 5 | `aimux/discovery` | ⬜ todo | Git repo + worktree auto-discovery under ~ |
+| 5 | `aimux/discovery` | ✅ done | Git repo + worktree auto-discovery under ~ |
 | 6 | `aimux/tui-list` | ⬜ todo | Top bar + workspace-grouped session list |
 | 7 | `aimux/new-session` | ⬜ todo | n hotkey: workspace picker + spawn claude |
 | 8 | `aimux/kill` | ⬜ todo | k hotkey: kill with confirmation |
