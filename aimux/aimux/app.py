@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import time
-from typing import TYPE_CHECKING
 
 from textual.app import App, ComposeResult
 from textual.binding import Binding
@@ -15,11 +14,11 @@ from aimux.state import (
     SessionState,
     get_session_state,
     list_sessions,
+    register_session,
 )
+from aimux.tmux import attach_session, create_session, ensure_server, send_keys
+from aimux.widgets.new_session import SessionNamePrompt, WorkspacePicker
 from aimux.widgets.session_list import SessionList
-
-if TYPE_CHECKING:
-    pass
 
 _REFRESH_INTERVAL = 2.0  # seconds between state polls
 
@@ -138,13 +137,50 @@ class AimuxApp(App):
         hint.display = False
 
     def action_new_session(self) -> None:
-        # Implemented in aimux/new-session commit
-        self.notify("New session: coming soon!", severity="information")
+        def _on_workspace(workspace) -> None:
+            if workspace is None:
+                return
+            def _on_name(name: str | None) -> None:
+                if not name:
+                    return
+                self._spawn_session(workspace, name)
+            self.push_screen(SessionNamePrompt(workspace), _on_name)
+
+        self.push_screen(WorkspacePicker(), _on_workspace)
+
+    def _spawn_session(self, workspace, name: str) -> None:
+        ensure_server()
+        create_session(
+            session_id=name,
+            workspace=str(workspace.path),
+            env={"AIMUX_SESSION_ID": name},
+        )
+        info = SessionInfo(
+            id=name,
+            name=name,
+            workspace=str(workspace.path),
+            tmux_session=f"aimux-{name}",
+        )
+        register_session(info)
+        # Send `claude` command to the new session then attach
+        send_keys(name, "claude --dangerously-skip-permissions")
+        self._attach(name)
+
+    def _attach(self, session_id: str) -> None:
+        with self.suspend():
+            attach_session(session_id)
+        # Refresh state after returning from tmux
+        self._refresh_state()
+
+    def action_attach_session(self) -> None:
+        try:
+            sl = self.query_one(SessionList)
+            info = sl.get_selected_session()
+            if info:
+                self._attach(info.id)
+        except Exception:
+            pass
 
     def action_kill_session(self) -> None:
         # Implemented in aimux/kill commit
         self.notify("Kill: coming soon!", severity="information")
-
-    def action_attach_session(self) -> None:
-        # Implemented in aimux/new-session commit (attach logic)
-        self.notify("Attach: coming soon!", severity="information")
