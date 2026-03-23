@@ -16,6 +16,10 @@ Takes the output of Claude plan mode (a structured `PLAN.md`), decomposes it int
 
 A CLI for managing commit-level stacked PRs (Graphite-style: 1 commit = 1 PR). Each commit on a branch becomes its own PR, chained so that PR B's base is PR A's branch. Commands: push the full stack (creating or updating PRs), sync after a merge (rebase remaining stack onto new base), list the stack with live PR status, and land the bottom PR then auto-sync the rest.
 
+## Stack Merge Bot
+
+A GitHub Actions workflow template that automates rebasing stacked PRs after a squash merge. When a PR merges, the action finds the next PR in the stack (the one whose base branch = the just-merged branch), runs `git rebase --onto <new-base> <old-base> <next-branch>`, force-pushes, and updates the PR's base branch. Cascade is event-driven: if auto-merge is enabled on subsequent PRs, each merge triggers the next rebase automatically. Install by copying `workflow-template.yml` into `.github/workflows/` of any target repo.
+
 ## PR Babysitter
 
 Polls your open PRs and takes action when problems are found. For CI failures: fetches the logs, spawns a Claude session to analyze and push a fix. For merge conflicts: spawns Claude to resolve and push. Runs as a background daemon or via a cron-style loop, notifying you of what it attempted and whether it succeeded.
