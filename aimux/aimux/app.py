@@ -11,6 +11,7 @@ from textual.widgets import Footer, Label, ListView, Static
 from aimux.state import (
     SessionInfo,
     SessionState,
+    get_killed_cost_today,
     get_session_state,
     list_sessions,
     register_session,
@@ -111,7 +112,7 @@ class AimuxApp(App):
         bar = self.query_one(TopBar)
         bar.sessions_total = len(pairs)
         bar.sessions_waiting = sum(1 for _, s in pairs if s.status == "waiting")
-        bar.cost_today = sum(s.cost_usd for _, s in pairs)
+        bar.cost_today = sum(s.cost_usd for _, s in pairs) + get_killed_cost_today()
 
         has_sessions = bool(pairs)
         self.query_one("#empty-hint").display = not has_sessions

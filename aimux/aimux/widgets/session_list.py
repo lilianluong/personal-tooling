@@ -142,12 +142,21 @@ class SessionList(Widget):
         for item in items:
             lv.append(item)
 
-        # Restore selection by session id
-        if selected_id is not None:
-            for i, child in enumerate(lv.children):
-                if isinstance(child, SessionRow) and child.session_info.id == selected_id:
-                    lv.index = i
+        # Restore selection by session id, or default to first session row
+        target_index = None
+        first_session_index = None
+        for i, child in enumerate(lv.children):
+            if isinstance(child, SessionRow):
+                if first_session_index is None:
+                    first_session_index = i
+                if selected_id is not None and child.session_info.id == selected_id:
+                    target_index = i
                     break
+
+        if target_index is not None:
+            lv.index = target_index
+        elif first_session_index is not None:
+            lv.index = first_session_index
 
     def _build_items(self, sessions: list[tuple[SessionInfo, SessionState]]) -> list[ListItem]:
         # Group by workspace

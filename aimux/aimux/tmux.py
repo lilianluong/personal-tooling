@@ -41,8 +41,8 @@ def ensure_server() -> None:
     """Start the aimux tmux server if not already running, and apply keybindings."""
     result = _tmux(["list-sessions"], check=False)
     if result.returncode != 0:
-        # Server not running — start it with a dummy session we'll name "aimux-init"
-        # then kill it. We need at least one session to start the server.
+        # Server not running — bootstrap with a dummy session.
+        # It will be cleaned up once a real session is created.
         _tmux(["new-session", "-d", "-s", "aimux-init", "-x", "220", "-y", "50"])
 
     _apply_keybindings()
@@ -78,6 +78,8 @@ def create_session(session_id: str, workspace: str, env: dict[str, str] | None =
         "-c", workspace,
         *env_args,
     ])
+    # Clean up the bootstrap session now that a real session exists.
+    _tmux(["kill-session", "-t", "aimux-init"], check=False)
 
 
 def kill_session(session_id: str) -> None:
@@ -99,7 +101,7 @@ def list_tmux_sessions() -> list[str]:
         return []
     names = result.stdout.strip().splitlines()
     prefix = "aimux-"
-    return [n[len(prefix):] for n in names if n.startswith(prefix)]
+    return [n[len(prefix):] for n in names if n.startswith(prefix) and n != "aimux-init"]
 
 
 def send_keys(session_id: str, keys: str) -> None:
