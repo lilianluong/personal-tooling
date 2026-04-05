@@ -45,7 +45,7 @@ class TopBar(Static):
     def render(self) -> str:
         waiting_str = ""
         if self.sessions_waiting:
-            waiting_str = f"  •  ⏳ {self.sessions_waiting} waiting"
+            waiting_str = f"  •  👀 {self.sessions_waiting} waiting"
         return (
             f"aimux  •  {self.sessions_total} sessions"
             f"{waiting_str}"

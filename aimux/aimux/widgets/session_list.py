@@ -14,8 +14,8 @@ from aimux.state import SessionInfo, SessionState, SessionStatus
 
 
 _STATUS_EMOJI: dict[SessionStatus, str] = {
-    "active":  "🔄",
-    "waiting": "⏳",
+    "active":  "⏳",
+    "waiting": "👀",
     "ended":   "💀",
 }
 
@@ -34,6 +34,34 @@ def _idle_str(idle_since: float | None) -> str:
 def _worktree_label(workspace: str) -> str:
     """Short name for the worktree: last path component."""
     return Path(workspace).name
+
+
+class WrapListView(ListView):
+    """ListView with wrap-around keyboard navigation."""
+
+    def action_cursor_up(self) -> None:
+        nodes = list(self._nodes)
+        if not nodes:
+            return
+        current = self.index if self.index is not None else 0
+        n = len(nodes)
+        for delta in range(1, n + 1):
+            idx = (current - delta) % n
+            if not nodes[idx].disabled:
+                self.index = idx
+                return
+
+    def action_cursor_down(self) -> None:
+        nodes = list(self._nodes)
+        if not nodes:
+            return
+        current = self.index if self.index is not None else 0
+        n = len(nodes)
+        for delta in range(1, n + 1):
+            idx = (current + delta) % n
+            if not nodes[idx].disabled:
+                self.index = idx
+                return
 
 
 class SessionRow(ListItem):
@@ -116,7 +144,7 @@ class SessionList(Widget):
     sessions: reactive[list[tuple[SessionInfo, SessionState]]] = reactive(list)
 
     def compose(self) -> ComposeResult:
-        yield ListView(id="session-listview")
+        yield WrapListView(id="session-listview")
 
     def on_mount(self) -> None:
         self._repopulate(self.sessions)
