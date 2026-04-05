@@ -104,10 +104,13 @@ def list_tmux_sessions() -> list[str]:
     return [n[len(prefix):] for n in names if n.startswith(prefix) and n != "aimux-init"]
 
 
-def send_keys(session_id: str, keys: str) -> None:
+def send_keys(session_id: str, keys: str, enter: bool = True) -> None:
     """Send keystrokes to a tmux session's active pane."""
     name = session_name(session_id)
-    _tmux(["send-keys", "-t", name, keys, "Enter"])
+    args = ["send-keys", "-t", name, keys]
+    if enter:
+        args.append("Enter")
+    _tmux(args)
 
 
 def capture_pane(session_id: str, lines: int = 50) -> str:

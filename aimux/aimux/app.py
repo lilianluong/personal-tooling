@@ -14,10 +14,10 @@ from aimux.state import (
     get_killed_cost_today,
     get_session_state,
     list_sessions,
-    register_session,
     remove_session,
 )
-from aimux.tmux import attach_session, create_session, ensure_server, kill_session, send_keys
+from aimux.spawn import spawn_session
+from aimux.tmux import attach_session, kill_session
 from aimux.widgets.confirm_kill import ConfirmKill
 from aimux.widgets.detail_panel import DetailPanel
 from aimux.widgets.new_session import SessionNamePrompt, WorkspacePicker
@@ -157,20 +157,7 @@ class AimuxApp(App):
         self.push_screen(WorkspacePicker(), _on_workspace)
 
     def _spawn_session(self, workspace, name: str) -> None:
-        ensure_server()
-        create_session(
-            session_id=name,
-            workspace=str(workspace.path),
-            env={"AIMUX_SESSION_ID": name},
-        )
-        info = SessionInfo(
-            id=name,
-            name=name,
-            workspace=str(workspace.path),
-            tmux_session=f"aimux-{name}",
-        )
-        register_session(info)
-        send_keys(name, "claude --dangerously-skip-permissions")
+        spawn_session(str(workspace.path), name)
         self._attach(name)
 
     def _attach(self, session_id: str) -> None:
