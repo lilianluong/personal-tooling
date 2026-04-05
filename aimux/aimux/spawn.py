@@ -20,8 +20,8 @@ def spawn_session(workspace: str, name: str, prompt: str | None = None) -> Sessi
     register_session(info)
     send_keys(name, "claude --dangerously-skip-permissions")
     if prompt:
-        time.sleep(1.5)
+        time.sleep(2.0)
         send_keys(name, prompt, enter=False)
-        time.sleep(0.1)
+        time.sleep(1.5)
         send_keys(name, "", enter=True)
     return info
