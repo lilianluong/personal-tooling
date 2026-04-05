@@ -46,22 +46,25 @@ with open(settings_path) as f:
 
 hooks = s.setdefault("hooks", {})
 
-def set_hook(event, script):
-    """Add aimux hook command if not already present."""
+def set_hook(event, script, matcher=""):
+    """Add aimux hook command if not already present (idempotent by command string)."""
     cmd = f"python3 {hook_dir}/{script}"
     entries = hooks.setdefault(event, [])
-    # Check by command string to stay idempotent
     for entry in entries:
-        if isinstance(entry, dict) and entry.get("hooks"):
+        if isinstance(entry, dict) and entry.get("matcher") == matcher and entry.get("hooks"):
             for h in entry["hooks"]:
                 if h.get("command") == cmd:
                     return
-    entries.append({"matcher": "", "hooks": [{"type": "command", "command": cmd}]})
+    entries.append({"matcher": matcher, "hooks": [{"type": "command", "command": cmd}]})
 
 set_hook("SessionStart", "session_start.py")
 set_hook("Stop", "stop.py")
 set_hook("UserPromptSubmit", "prompt_submit.py")
 set_hook("SessionEnd", "session_end.py")
+set_hook("PreToolUse", "pre_tool_use.py", "AskUserQuestion")
+set_hook("PreToolUse", "pre_tool_use.py", "ExitPlanMode")
+set_hook("PostToolUse", "post_tool_use.py", "AskUserQuestion")
+set_hook("PostToolUse", "post_tool_use.py", "ExitPlanMode")
 
 with open(settings_path, "w") as f:
     json.dump(s, f, indent=2)
