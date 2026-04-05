@@ -170,10 +170,11 @@ class SessionList(Widget):
         for item in items:
             lv.append(item)
 
-        # Restore selection by session id, or default to first session row
+        # Restore selection by session id, or default to first session row.
+        # Iterate `items` (not lv.children) so indices match lv._nodes exactly.
         target_index = None
         first_session_index = None
-        for i, child in enumerate(lv.children):
+        for i, child in enumerate(items):
             if isinstance(child, SessionRow):
                 if first_session_index is None:
                     first_session_index = i
