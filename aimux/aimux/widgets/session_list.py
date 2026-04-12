@@ -48,7 +48,10 @@ class WrapListView(ListView):
         for delta in range(1, n + 1):
             idx = (current - delta) % n
             if not nodes[idx].disabled:
-                self.index = idx
+                if idx != self.index:
+                    self.index = idx
+                else:
+                    self.post_message(ListView.Highlighted(self, nodes[idx]))
                 return
 
     def action_cursor_down(self) -> None:
@@ -60,7 +63,10 @@ class WrapListView(ListView):
         for delta in range(1, n + 1):
             idx = (current + delta) % n
             if not nodes[idx].disabled:
-                self.index = idx
+                if idx != self.index:
+                    self.index = idx
+                else:
+                    self.post_message(ListView.Highlighted(self, nodes[idx]))
                 return
 
 
