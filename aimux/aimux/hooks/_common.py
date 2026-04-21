@@ -31,6 +31,7 @@ def parse_transcript(path: str) -> dict:
     total_cost = 0.0
     last_context_tokens = 0
     model = "claude-sonnet-4-6"
+    seen_message_ids: set[str] = set()
 
     try:
         with open(path) as f:
@@ -45,6 +46,12 @@ def parse_transcript(path: str) -> dict:
 
                 if entry.get("type") != "assistant":
                     continue
+
+                msg_id = entry.get("message", {}).get("id")
+                if msg_id:
+                    if msg_id in seen_message_ids:
+                        continue
+                    seen_message_ids.add(msg_id)
 
                 msg = entry.get("message", {})
                 usage = msg.get("usage", {})
