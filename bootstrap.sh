@@ -94,6 +94,20 @@ else
   green "  installed: git-branchless"
 fi
 
+if command -v gh &>/dev/null; then
+  yellow "  already installed: gh"
+else
+  echo "  installing gh..."
+  if command -v brew &>/dev/null; then
+    brew install gh
+  elif command -v apt-get &>/dev/null; then
+    sudo apt-get install -y gh
+  else
+    yellow "  install gh manually: https://cli.github.com"
+  fi
+  green "  installed: gh"
+fi
+
 if command -v claude &>/dev/null; then
   yellow "  already installed: claude"
 else
