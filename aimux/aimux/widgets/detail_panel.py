@@ -11,6 +11,7 @@ from __future__ import annotations
 import subprocess
 import time
 
+from rich.markup import escape
 from textual.app import ComposeResult
 from textual.reactive import reactive
 from textual.widget import Widget
@@ -103,12 +104,12 @@ class DetailPanel(Widget):
         cost.display = True
         git.display = True
 
-        header.update(f"{info.name}  —  {info.workspace}")
+        header.update(escape(f"{info.name}  —  {info.workspace}"))
 
         # Pane preview
         if session_exists(info.id):
             raw = capture_pane(info.id, lines=20)
-            pane.update(raw or "(empty)")
+            pane.update(escape(raw) if raw else "(empty)")
         else:
             pane.update("(session not running)")
 
@@ -128,7 +129,7 @@ class DetailPanel(Widget):
         # Git status
         git_out = _git_status(info.workspace)
         if git_out:
-            git.update(f"[bold]Git status[/bold]\n{git_out}")
+            git.update(f"[bold]Git status[/bold]\n{escape(git_out)}")
         else:
             git.update("[bold]Git status[/bold]\n  (clean)")
 
