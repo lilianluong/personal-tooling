@@ -16,11 +16,11 @@ from aimux.state import (
     list_sessions,
     remove_session,
 )
-from aimux.spawn import spawn_session
+from aimux.spawn import spawn_session, spawn_worktree_session
 from aimux.tmux import attach_session, kill_session
 from aimux.widgets.confirm_kill import ConfirmKill
 from aimux.widgets.detail_panel import DetailPanel
-from aimux.widgets.new_session import SessionNamePrompt, WorkspacePicker
+from aimux.widgets.new_session import SessionNamePrompt, WorkspacePicker, WorktreeNamePrompt
 from aimux.widgets.session_list import SessionList, SessionRow
 
 _REFRESH_INTERVAL = 2.0  # seconds between state polls
@@ -60,6 +60,7 @@ class AimuxApp(App):
         Binding("q", "quit", "Quit"),
         Binding("escape", "quit", "Quit"),
         Binding("n", "new_session", "New"),
+        Binding("w", "new_worktree", "Worktree"),
         Binding("k", "kill_session", "Kill"),
     ]
 
@@ -155,6 +156,19 @@ class AimuxApp(App):
             self.push_screen(SessionNamePrompt(workspace), _on_name)
 
         self.push_screen(WorkspacePicker(), _on_workspace)
+
+    def action_new_worktree(self) -> None:
+        def _on_repo(workspace) -> None:
+            if workspace is None:
+                return
+            def _on_name(name: str | None) -> None:
+                if not name:
+                    return
+                spawn_worktree_session(str(workspace.path), name)
+                self._attach(name)
+            self.push_screen(WorktreeNamePrompt(workspace), _on_name)
+
+        self.push_screen(WorkspacePicker(repos_only=True), _on_repo)
 
     def _spawn_session(self, workspace, name: str) -> None:
         spawn_session(str(workspace.path), name)

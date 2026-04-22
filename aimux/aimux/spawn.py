@@ -2,10 +2,35 @@
 
 from __future__ import annotations
 
+import subprocess
 import time
+from pathlib import Path
 
 from aimux.state import SessionInfo, register_session
 from aimux.tmux import create_session, ensure_server, send_keys
+
+
+def get_tooling_user() -> str:
+    config = Path.home() / ".config/personal-tooling/config"
+    try:
+        for line in config.read_text().splitlines():
+            if line.startswith("TOOLING_USER="):
+                return line.split("=", 1)[1].strip()
+    except (FileNotFoundError, PermissionError):
+        pass
+    return "user"
+
+
+def spawn_worktree_session(repo_path: str, name: str) -> SessionInfo:
+    """Create a git worktree at ~/<name> with branch <tooling_user>/<name> and spawn a session."""
+    branch = f"{get_tooling_user()}/{name}"
+    worktree_path = Path.home() / name
+    subprocess.run(
+        ["git", "worktree", "add", "-b", branch, str(worktree_path)],
+        cwd=repo_path,
+        check=True,
+    )
+    return spawn_session(str(worktree_path), name)
 
 
 def spawn_session(workspace: str, name: str, prompt: str | None = None) -> SessionInfo:

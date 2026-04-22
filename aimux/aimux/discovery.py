@@ -112,7 +112,7 @@ def _get_worktrees(repo_path: Path) -> list[Workspace]:
             is_bare = True
         elif line == "" and current_path is not None:
             if not is_bare:
-                is_wt = current_path != repo_path
+                is_wt = not (current_path / ".git").is_dir()
                 worktrees.append(Workspace(
                     path=current_path,
                     repo_root=repo_path,
@@ -123,7 +123,7 @@ def _get_worktrees(repo_path: Path) -> list[Workspace]:
 
     # Handle last entry (no trailing blank line)
     if current_path is not None and not is_bare:
-        is_wt = current_path != repo_path
+        is_wt = not (current_path / ".git").is_dir()
         worktrees.append(Workspace(
             path=current_path,
             repo_root=repo_path,
