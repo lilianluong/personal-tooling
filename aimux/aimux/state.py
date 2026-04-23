@@ -46,6 +46,7 @@ class SessionState:
     cost_usd: float = 0.0
     context_pct: float = 0.0          # 0–100
     last_tool: str | None = None
+    bg_tasks: int = 0                 # background Agent tool calls in flight
 
 
 # ── helpers ───────────────────────────────────────────────────────────────────

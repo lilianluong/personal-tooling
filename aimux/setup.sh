@@ -65,6 +65,8 @@ set_hook("PreToolUse", "pre_tool_use.py", "AskUserQuestion")
 set_hook("PreToolUse", "pre_tool_use.py", "ExitPlanMode")
 set_hook("PostToolUse", "post_tool_use.py", "AskUserQuestion")
 set_hook("PostToolUse", "post_tool_use.py", "ExitPlanMode")
+set_hook("PreToolUse", "bg_task_start.py", "Agent")
+set_hook("PostToolUse", "bg_task_end.py", "Agent")
 
 with open(settings_path, "w") as f:
     json.dump(s, f, indent=2)

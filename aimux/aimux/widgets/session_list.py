@@ -94,8 +94,9 @@ class SessionRow(ListItem):
         ctx = f"{state.context_pct:.0f}%"
         idle = _idle_str(state.idle_since)
         idle_part = f"  {idle} ago" if idle else ""
+        bg_part = f"  🔄 {state.bg_tasks}" if state.bg_tasks > 0 else ""
         yield Label(
-            f"{emoji}  {info.name:<22} {wt:<12} {cost:>7}  {ctx:>4}{idle_part}"
+            f"{emoji}  {info.name:<22} {wt:<12} {cost:>7}  {ctx:>4}{bg_part}{idle_part}"
         )
 
 
