@@ -1,4 +1,7 @@
-# git-branchless
+---
+name: git-branchless
+description: Use when managing stacked PRs with git-branchless. Reference for git-branchless commands, stacked PR workflow, and amending commits mid-stack.
+---
 
 Use this skill when managing stacked PRs.
 

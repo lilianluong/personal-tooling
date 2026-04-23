@@ -1,4 +1,7 @@
-# fetch-pr-comments
+---
+name: fetch-pr-comments
+description: Fetch unresolved review thread comments from the current branch's PR. Use when the user asks to see PR review comments, address feedback, or check what reviewers said.
+---
 
 Fetch unresolved review thread comments from the current branch's PR using `gh`.
 
