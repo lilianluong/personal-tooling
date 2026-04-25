@@ -21,6 +21,28 @@ def get_tooling_user() -> str:
     return "user"
 
 
+def check_worktree_has_unstaged(path: Path) -> bool:
+    try:
+        result = subprocess.run(
+            ["git", "status", "--porcelain"],
+            cwd=path,
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+        return bool(result.stdout.strip())
+    except Exception:
+        return False
+
+
+def remove_worktree(worktree_path: Path, repo_root: Path) -> None:
+    subprocess.run(
+        ["git", "worktree", "remove", "--force", str(worktree_path)],
+        cwd=repo_root,
+        check=True,
+    )
+
+
 def spawn_worktree_session(repo_path: str, name: str) -> SessionInfo:
     """Create a git worktree at ~/<name> with branch <tooling_user>/<name> and spawn a session."""
     branch = f"{get_tooling_user()}/{name}"

@@ -8,6 +8,7 @@ from textual.containers import Horizontal
 from textual.reactive import reactive
 from textual.widgets import Footer, Label, ListView, Static
 
+from aimux.discovery import discover_workspaces
 from aimux.state import (
     SessionInfo,
     SessionState,
@@ -16,10 +17,11 @@ from aimux.state import (
     list_sessions,
     remove_session,
 )
-from aimux.spawn import spawn_session, spawn_worktree_session
+from aimux.spawn import check_worktree_has_unstaged, remove_worktree, spawn_session, spawn_worktree_session
 from aimux.tmux import attach_session, kill_session
 from aimux.widgets.confirm_kill import ConfirmKill
 from aimux.widgets.detail_panel import DetailPanel
+from aimux.widgets.kill_worktree import ConfirmKillWorktree, KillWorktreePicker
 from aimux.widgets.new_session import SessionNamePrompt, WorkspacePicker, WorktreeNamePrompt
 from aimux.widgets.session_list import SessionList, SessionRow
 
@@ -62,6 +64,7 @@ class AimuxApp(App):
         Binding("n", "new_session", "New"),
         Binding("w", "new_worktree", "Worktree"),
         Binding("k", "kill_session", "Kill"),
+        Binding("c", "kill_worktree", "Kill WT"),
     ]
 
     CSS = """
@@ -195,3 +198,27 @@ class AimuxApp(App):
                 self._refresh_state()
 
         self.push_screen(ConfirmKill(info.name), _on_confirm)
+
+    def action_kill_worktree(self) -> None:
+        def _on_worktree(worktree) -> None:
+            if worktree is None:
+                return
+
+            open_names = [
+                info.name
+                for info in list_sessions()
+                if info.workspace == str(worktree.path)
+                and get_session_state(info.id).status != "ended"
+            ]
+            has_unstaged = check_worktree_has_unstaged(worktree.path)
+
+            def _on_confirm(confirmed: bool) -> None:
+                if confirmed:
+                    remove_worktree(worktree.path, worktree.repo_root)
+                    discover_workspaces(refresh=True)
+                    self._refresh_state()
+                self.push_screen(KillWorktreePicker(), _on_worktree)
+
+            self.push_screen(ConfirmKillWorktree(worktree, open_names, has_unstaged), _on_confirm)
+
+        self.push_screen(KillWorktreePicker(), _on_worktree)
