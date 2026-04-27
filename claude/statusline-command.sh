@@ -1,10 +1,13 @@
 #!/bin/sh
+BRANCH=$(git -C "${GIT_DIR:-.}" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
+export BRANCH
 cat | python3 -c "
-import json, sys
+import json, sys, os
 
 data = json.load(sys.stdin)
 
 model = (data.get('model') or {}).get('display_name') or 'unknown'
+branch = os.environ.get('BRANCH', '')
 
 cw = data.get('context_window') or {}
 total_in = cw.get('total_input_tokens') or 0
@@ -21,7 +24,10 @@ else:
 
 cost = (data.get('cost') or {}).get('total_cost_usd')
 
-status = f'{model} | tokens: {tokens_fmt}'
+status = f'{model}'
+if branch:
+    status += f' | {branch}'
+status += f' | tokens: {tokens_fmt}'
 if used_pct is not None:
     status += f' | ctx: {round(used_pct)}%'
 if cost:
