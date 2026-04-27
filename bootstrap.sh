@@ -133,6 +133,9 @@ for rc in "$HOME/.zshrc" "$HOME/.bashrc"; do
   add_source_line "$rc" "$SOURCE_LINE"
 done
 
+# zsh-only: full path prompt, with hostname when SSH'd
+add_source_line "$HOME/.zshrc" "PROMPT='\${SSH_TTY:+%m:}%~ %# '"
+
 echo ""
 
 # ── claude config ─────────────────────────────────────────────────────────────
