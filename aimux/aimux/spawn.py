@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import shutil
 import subprocess
 import time
 from pathlib import Path
@@ -36,11 +37,15 @@ def check_worktree_has_unstaged(path: Path) -> bool:
 
 
 def remove_worktree(worktree_path: Path, repo_root: Path) -> None:
-    subprocess.run(
+    result = subprocess.run(
         ["git", "worktree", "remove", "--force", str(worktree_path)],
         cwd=repo_root,
-        check=True,
+        capture_output=True,
     )
+    if result.returncode != 0:
+        # Metadata is stale/broken — remove directory manually and prune refs.
+        shutil.rmtree(worktree_path, ignore_errors=True)
+        subprocess.run(["git", "worktree", "prune"], cwd=repo_root, capture_output=True)
 
 
 def spawn_worktree_session(repo_path: str, name: str) -> SessionInfo:
