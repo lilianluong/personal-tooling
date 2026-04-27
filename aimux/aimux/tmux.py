@@ -9,20 +9,22 @@ The server is started on first use and persists until explicitly stopped.
 
 from __future__ import annotations
 
+import shutil
 import subprocess
 from typing import Sequence
 
 
 TMUX_SOCKET = "aimux"
 
-# Keybindings configured in the aimux tmux server (no prefix needed)
-_KEYBINDINGS = [
-    # Alt+d — detach from current session, returns user to aimux TUI
-    "bind-key -n M-d detach-client",
-    # Alt+z — switch to previous session
-    "bind-key -n M-z switch-client -p",
-    # Alt+x — switch to next session
-    "bind-key -n M-x switch-client -n",
+_STATUS_OPTIONS: list[list[str]] = [
+    ["set-option", "-g", "status", "on"],
+    ["set-option", "-g", "status-style", "bg=colour235,fg=colour252"],
+    ["set-option", "-g", "status-left",
+     " #[fg=colour39,bold]#{s/aimux-//:session_name}  #[fg=colour245,nobold]#{b:session_path} "],
+    ["set-option", "-g", "status-left-length", "80"],
+    ["set-option", "-g", "status-right", ""],
+    ["set-option", "-g", "window-status-format", ""],
+    ["set-option", "-g", "window-status-current-format", ""],
 ]
 
 
@@ -46,11 +48,23 @@ def ensure_server() -> None:
         _tmux(["new-session", "-d", "-s", "aimux-init", "-x", "220", "-y", "50"])
 
     _apply_keybindings()
+    _apply_options()
 
 
 def _apply_keybindings() -> None:
-    for binding in _KEYBINDINGS:
-        _tmux(binding.split())
+    aimux_bin = shutil.which("aimux") or "aimux"
+    bindings: list[list[str]] = [
+        ["bind-key", "-n", "M-d", "detach-client"],
+        ["bind-key", "-n", "M-z", "run-shell", f"{aimux_bin} cycle prev --current #{{session_name}}"],
+        ["bind-key", "-n", "M-x", "run-shell", f"{aimux_bin} cycle next --current #{{session_name}}"],
+    ]
+    for binding in bindings:
+        _tmux(binding)
+
+
+def _apply_options() -> None:
+    for option in _STATUS_OPTIONS:
+        _tmux(option)
 
 
 def server_running() -> bool:
@@ -133,3 +147,34 @@ def attach_session(session_id: str) -> None:
     """
     name = session_name(session_id)
     subprocess.run(["tmux", "-L", TMUX_SOCKET, "attach-session", "-t", name])
+
+
+def cycle_session(direction: str, current_tmux_name: str) -> None:
+    """Switch to prev/next session in menu order (alphabetical by workspace, then reg order)."""
+    from aimux.state import list_sessions
+
+    sessions = list_sessions()
+    groups: dict[str, list[str]] = {}
+    for info in sessions:
+        groups.setdefault(info.workspace, []).append(info.id)
+    sorted_ids: list[str] = []
+    for workspace in sorted(groups):
+        sorted_ids.extend(groups[workspace])
+
+    if not sorted_ids:
+        return
+
+    prefix = "aimux-"
+    current_id = current_tmux_name[len(prefix):] if current_tmux_name.startswith(prefix) else current_tmux_name
+
+    try:
+        idx = sorted_ids.index(current_id)
+    except ValueError:
+        return
+
+    if direction == "prev":
+        target_idx = (idx - 1) % len(sorted_ids)
+    else:
+        target_idx = (idx + 1) % len(sorted_ids)
+
+    _tmux(["switch-client", "-t", session_name(sorted_ids[target_idx])])
