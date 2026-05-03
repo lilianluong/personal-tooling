@@ -27,6 +27,7 @@ _STATUS_OPTIONS: list[list[str]] = [
     ["set-option", "-g", "window-status-current-format", ""],
     # Write TUI output to scrollback so ctrl+b [ can scroll through Claude's history.
     ["set-window-option", "-g", "alternate-screen", "off"],
+    ["set-option", "-g", "mouse", "on"],
 ]
 
 
