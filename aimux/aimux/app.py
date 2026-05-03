@@ -18,7 +18,7 @@ from aimux.state import (
     remove_session,
 )
 from aimux.spawn import check_worktree_has_unstaged, remove_worktree, spawn_session, spawn_worktree_session
-from aimux.tmux import attach_session, kill_session
+from aimux.tmux import attach_session, kill_session, apply_options_if_running
 from aimux.widgets.confirm_kill import ConfirmKill
 from aimux.widgets.detail_panel import DetailPanel
 from aimux.widgets.kill_worktree import ConfirmKillWorktree, KillWorktreePicker
@@ -98,6 +98,7 @@ class AimuxApp(App):
         yield Footer()
 
     def on_mount(self) -> None:
+        apply_options_if_running()
         self.query_one("#main-area").display = False
         self.set_interval(_REFRESH_INTERVAL, self._refresh_state)
         self._refresh_state()

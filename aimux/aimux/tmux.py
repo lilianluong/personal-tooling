@@ -25,6 +25,8 @@ _STATUS_OPTIONS: list[list[str]] = [
     ["set-option", "-g", "status-right", ""],
     ["set-option", "-g", "window-status-format", ""],
     ["set-option", "-g", "window-status-current-format", ""],
+    # Write TUI output to scrollback so ctrl+b [ can scroll through Claude's history.
+    ["set-window-option", "-g", "alternate-screen", "off"],
 ]
 
 
@@ -70,6 +72,13 @@ def _apply_options() -> None:
 def server_running() -> bool:
     result = _tmux(["list-sessions"], check=False)
     return result.returncode == 0
+
+
+def apply_options_if_running() -> None:
+    """Re-apply tmux options to the server if it's already running."""
+    if server_running():
+        _apply_keybindings()
+        _apply_options()
 
 
 # ── session management ────────────────────────────────────────────────────────
