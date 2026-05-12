@@ -3,43 +3,41 @@ name: run-voice-evals
 description: Run LiveKit voice agent eval scenarios. Use when the user asks to run evals, check eval scores, or benchmark agent behavior. Handles env vars, naming, GCS upload, and background execution.
 ---
 
-Run evals from the `livekit/` directory using the package script:
+Run evals from the `livekit/` directory using `run-evals.ts`:
 
 ```bash
 cd <repo-root>/livekit
-EVAL_RUNS=<n> EVAL_NAME=<name> bun run test:evals
+bun run evals/run-evals.ts --runs <n> --name <label>
 ```
+
+## Flags
+
+| Flag | Short | Purpose |
+|---|---|---|
+| `--runs N` | `-r` | Attempts per scenario (default 3) |
+| `--name label` | `-n` | Human label on the GCS result — always set this |
+| `--filter pattern` | `-f` | Substring filter on scenario IDs (passed as `-t` to bun and as `EVAL_FILTER` metadata) |
+| `--skip-gcs` | | Skip GCS upload — only for local debugging |
+
+**Never pass `--skip-gcs` for a real run.**
 
 ## Filtering to specific scenarios
 
-Use `--` to pass bun's `-t` (test name pattern) flag through the script:
-
 ```bash
-EVAL_RUNS=3 EVAL_NAME=rescheduling bun run test:evals -- -t "rescheduling"
+bun run evals/run-evals.ts -r 3 -n rescheduling -f rescheduling
 ```
 
-The pattern matches against scenario IDs (the first arg to `scenario.simulated()`), which are the `describe` block names.
-
-## Key env vars
-
-| Var | Default | Purpose |
-|---|---|---|
-| `EVAL_RUNS` | 3 | Attempts per scenario |
-| `EVAL_NAME` | _(none)_ | Human label on the GCS result — always set this |
-| `EVAL_FILTER` | _(none)_ | Substring filter on scenario IDs |
-| `EVAL_SKIP_GCS` | _(unset)_ | Set to `1` to skip upload — only for local debugging |
-
-**Never set `EVAL_SKIP_GCS` for a real run** — results must be uploaded.
+The `-f` pattern matches against scenario IDs (the first arg to `scenario.simulated()`).
 
 ## Running in the background
 
 When asked to run evals without blocking (or two sets in parallel), launch each as a background shell process and log output to a temp file:
 
 ```bash
-EVAL_RUNS=3 EVAL_NAME=confirmation bun run test:evals -- -t "confirmation" \
+bun run evals/run-evals.ts -r 3 -n confirmation -f confirmation \
   > /tmp/eval-confirmation.log 2>&1 &
 
-EVAL_RUNS=3 EVAL_NAME=rescheduling bun run test:evals -- -t "rescheduling" \
+bun run evals/run-evals.ts -r 3 -n rescheduling -f rescheduling \
   > /tmp/eval-rescheduling.log 2>&1 &
 ```
 
