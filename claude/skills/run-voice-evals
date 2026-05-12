@@ -10,13 +10,15 @@ cd <repo-root>/livekit
 EVAL_RUNS=<n> EVAL_NAME=<name> bun run test:evals
 ```
 
-## Running specific scenario files
+## Filtering to specific scenarios
 
-Append the file path(s) after `test:evals` to run a subset:
+Use `--` to pass bun's `-t` (test name pattern) flag through the script:
 
 ```bash
-EVAL_RUNS=3 EVAL_NAME=rescheduling bun run test:evals evals/scenarios/rescheduling.evals.test.ts
+EVAL_RUNS=3 EVAL_NAME=rescheduling bun run test:evals -- -t "rescheduling"
 ```
+
+The pattern matches against scenario IDs (the first arg to `scenario.simulated()`), which are the `describe` block names.
 
 ## Key env vars
 
@@ -34,10 +36,10 @@ EVAL_RUNS=3 EVAL_NAME=rescheduling bun run test:evals evals/scenarios/rescheduli
 When asked to run evals without blocking (or two sets in parallel), launch each as a background shell process and log output to a temp file:
 
 ```bash
-EVAL_RUNS=3 EVAL_NAME=confirmation bun run test:evals evals/scenarios/appointment-confirmation.evals.test.ts \
+EVAL_RUNS=3 EVAL_NAME=confirmation bun run test:evals -- -t "confirmation" \
   > /tmp/eval-confirmation.log 2>&1 &
 
-EVAL_RUNS=3 EVAL_NAME=rescheduling bun run test:evals evals/scenarios/rescheduling.evals.test.ts \
+EVAL_RUNS=3 EVAL_NAME=rescheduling bun run test:evals -- -t "rescheduling" \
   > /tmp/eval-rescheduling.log 2>&1 &
 ```
 
