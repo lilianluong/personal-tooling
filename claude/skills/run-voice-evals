@@ -1,0 +1,58 @@
+---
+name: run-voice-evals
+description: Run LiveKit voice agent eval scenarios. Use when the user asks to run evals, check eval scores, or benchmark agent behavior. Handles env vars, naming, GCS upload, and background execution.
+---
+
+Run evals from the `livekit/` directory using the package script:
+
+```bash
+cd <repo-root>/livekit
+EVAL_RUNS=<n> EVAL_NAME=<name> bun run test:evals
+```
+
+## Running specific scenario files
+
+Append the file path(s) after `test:evals` to run a subset:
+
+```bash
+EVAL_RUNS=3 EVAL_NAME=rescheduling bun run test:evals evals/scenarios/rescheduling.evals.test.ts
+```
+
+## Key env vars
+
+| Var | Default | Purpose |
+|---|---|---|
+| `EVAL_RUNS` | 3 | Attempts per scenario |
+| `EVAL_NAME` | _(none)_ | Human label on the GCS result — always set this |
+| `EVAL_FILTER` | _(none)_ | Substring filter on scenario IDs |
+| `EVAL_SKIP_GCS` | _(unset)_ | Set to `1` to skip upload — only for local debugging |
+
+**Never set `EVAL_SKIP_GCS` for a real run** — results must be uploaded.
+
+## Running in the background
+
+When asked to run evals without blocking (or two sets in parallel), launch each as a background shell process and log output to a temp file:
+
+```bash
+EVAL_RUNS=3 EVAL_NAME=confirmation bun run test:evals evals/scenarios/appointment-confirmation.evals.test.ts \
+  > /tmp/eval-confirmation.log 2>&1 &
+
+EVAL_RUNS=3 EVAL_NAME=rescheduling bun run test:evals evals/scenarios/rescheduling.evals.test.ts \
+  > /tmp/eval-rescheduling.log 2>&1 &
+```
+
+Tell the user the log paths so they can `tail -f` if they want live output.
+
+## Reading results
+
+Results are uploaded to GCS after each run. To tail a running log:
+
+```bash
+tail -f /tmp/eval-confirmation.log
+```
+
+To check if a background run finished:
+
+```bash
+cat /tmp/eval-confirmation.log | grep -E "pass|fail|score"
+```
