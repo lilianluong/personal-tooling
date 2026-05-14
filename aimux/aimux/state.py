@@ -47,6 +47,7 @@ class SessionState:
     context_pct: float = 0.0          # 0–100
     last_tool: str | None = None
     bg_tasks: int = 0                 # background Agent tool calls in flight
+    paused: bool = False              # excluded from list navigation and alt+z/x cycling
 
 
 # ── helpers ───────────────────────────────────────────────────────────────────
@@ -127,6 +128,12 @@ def update_session_state(state: SessionState) -> None:
     _ensure_dirs()
     path = SESSIONS_DIR / f"{state.id}.json"
     _write_json(path, asdict(state))
+
+
+def toggle_pause_session(session_id: str) -> None:
+    state = get_session_state(session_id)
+    state.paused = not state.paused
+    update_session_state(state)
 
 
 # ── killed-session cost accumulator ──────────────────────────────────────────

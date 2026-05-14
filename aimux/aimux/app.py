@@ -16,6 +16,7 @@ from aimux.state import (
     get_session_state,
     list_sessions,
     remove_session,
+    toggle_pause_session,
 )
 from aimux.spawn import check_worktree_has_unstaged, remove_worktree, spawn_session, spawn_worktree_session
 from aimux.tmux import attach_session, kill_session, apply_options_if_running
@@ -65,6 +66,8 @@ class AimuxApp(App):
         Binding("w", "new_worktree", "Worktree"),
         Binding("k", "kill_session", "Kill"),
         Binding("c", "kill_worktree", "Kill WT"),
+        Binding("p", "toggle_pause", "Pause"),
+        Binding("u", "focus_paused", "Paused"),
     ]
 
     CSS = """
@@ -223,3 +226,16 @@ class AimuxApp(App):
             self.push_screen(ConfirmKillWorktree(worktree, open_names, has_unstaged), _on_confirm)
 
         self.push_screen(KillWorktreePicker(), _on_worktree)
+
+    def action_toggle_pause(self) -> None:
+        try:
+            info = self.query_one(SessionList).get_selected_session()
+        except Exception:
+            info = None
+        if not info:
+            return
+        toggle_pause_session(info.id)
+        self._refresh_state()
+
+    def action_focus_paused(self) -> None:
+        self.query_one(SessionList).jump_to_paused()

@@ -159,11 +159,13 @@ def attach_session(session_id: str) -> None:
 
 def cycle_session(direction: str, current_tmux_name: str) -> None:
     """Switch to prev/next session in menu order (alphabetical by workspace, then reg order)."""
-    from aimux.state import list_sessions
+    from aimux.state import get_session_state, list_sessions
 
     sessions = list_sessions()
     groups: dict[str, list[str]] = {}
     for info in sessions:
+        if get_session_state(info.id).paused:
+            continue
         groups.setdefault(info.workspace, []).append(info.id)
     sorted_ids: list[str] = []
     for workspace in sorted(groups):

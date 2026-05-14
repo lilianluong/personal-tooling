@@ -37,7 +37,21 @@ def _worktree_label(workspace: str) -> str:
 
 
 class WrapListView(ListView):
-    """ListView with wrap-around keyboard navigation."""
+    """ListView with wrap-around keyboard navigation and optional paused-row skipping."""
+
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self._skip_paused: bool = True
+
+    def _is_paused_row(self, node) -> bool:
+        return isinstance(node, SessionRow) and node.session_paused
+
+    def _should_skip(self, node) -> bool:
+        if node.disabled:
+            return True
+        if self._skip_paused and self._is_paused_row(node):
+            return True
+        return False
 
     def action_cursor_up(self) -> None:
         nodes = list(self._nodes)
@@ -47,8 +61,10 @@ class WrapListView(ListView):
         n = len(nodes)
         for delta in range(1, n + 1):
             idx = (current - delta) % n
-            if not nodes[idx].disabled:
+            if not self._should_skip(nodes[idx]):
                 self.index = idx
+                if not self._is_paused_row(nodes[idx]):
+                    self._skip_paused = True
                 return
 
     def action_cursor_down(self) -> None:
@@ -59,9 +75,21 @@ class WrapListView(ListView):
         n = len(nodes)
         for delta in range(1, n + 1):
             idx = (current + delta) % n
-            if not nodes[idx].disabled:
+            if not self._should_skip(nodes[idx]):
                 self.index = idx
+                if not self._is_paused_row(nodes[idx]):
+                    self._skip_paused = True
                 return
+
+    def jump_to_first_paused(self) -> bool:
+        """Move cursor to first paused session row. Returns True if one was found."""
+        nodes = list(self._nodes)
+        for i, node in enumerate(nodes):
+            if self._is_paused_row(node):
+                self._skip_paused = False
+                self.index = i
+                return True
+        return False
 
 
 class SessionRow(ListItem):
@@ -78,17 +106,30 @@ class SessionRow(ListItem):
     SessionRow.-selected {
         background: $accent;
     }
+    SessionRow.paused {
+        color: $text-muted;
+        text-style: dim;
+    }
+    SessionRow.paused.-selected {
+        background: $surface;
+    }
     """
 
     def __init__(self, info: SessionInfo, state: SessionState) -> None:
         super().__init__()
         self.session_info = info
         self.session_state = state
+        self.session_paused = state.paused
+        if state.paused:
+            self.add_class("paused")
 
     def compose(self) -> ComposeResult:
         info = self.session_info
         state = self.session_state
-        emoji = _STATUS_EMOJI.get(state.status, "❓")
+        if state.paused:
+            emoji = "⏸"
+        else:
+            emoji = _STATUS_EMOJI.get(state.status, "❓")
         wt = _worktree_label(info.workspace)
         cost = f"${state.cost_usd:.2f}"
         ctx = f"{state.context_pct:.0f}%"
@@ -125,6 +166,29 @@ class WorkspaceHeader(ListItem):
         yield Label(f"WORKSPACE  {self._display}")
 
 
+class PausedHeader(ListItem):
+    """Non-interactive divider above the paused sessions section."""
+
+    DEFAULT_CSS = """
+    PausedHeader {
+        height: 1;
+        padding: 0 1;
+        background: $surface;
+        color: $text-muted;
+        margin-top: 1;
+    }
+    PausedHeader:hover {
+        background: $surface;
+    }
+    """
+
+    def __init__(self) -> None:
+        super().__init__(disabled=True)
+
+    def compose(self) -> ComposeResult:
+        yield Label("PAUSED  (press u to navigate, p to unpause)")
+
+
 class SessionList(Widget):
     """Left panel: workspace-grouped list of sessions."""
 
@@ -157,8 +221,7 @@ class SessionList(Widget):
             pass  # widget not yet mounted
 
     def _repopulate(self, sessions: list[tuple[SessionInfo, SessionState]]) -> None:
-        lv = self.query_one("#session-listview", ListView)
-        # Remember which session is highlighted
+        lv = self.query_one("#session-listview", WrapListView)
         highlighted = lv.highlighted_child
         selected_id = (
             highlighted.session_info.id
@@ -171,27 +234,40 @@ class SessionList(Widget):
         for item in items:
             lv.append(item)
 
-        # Restore selection by session id, or default to first session row.
-        # Iterate `items` (not lv.children) so indices match lv._nodes exactly.
         target_index = None
-        first_session_index = None
+        first_active_index = None
+        first_paused_index = None
+
         for i, child in enumerate(items):
             if isinstance(child, SessionRow):
-                if first_session_index is None:
-                    first_session_index = i
+                if child.session_paused:
+                    if first_paused_index is None:
+                        first_paused_index = i
+                else:
+                    if first_active_index is None:
+                        first_active_index = i
                 if selected_id is not None and child.session_info.id == selected_id:
                     target_index = i
                     break
 
+        # If the selected session was paused, move focus to first active row instead
+        if target_index is not None:
+            item = items[target_index]
+            if isinstance(item, SessionRow) and item.session_paused:
+                target_index = first_active_index
+
         if target_index is not None:
             lv.index = target_index
-        elif first_session_index is not None:
-            lv.index = first_session_index
+        elif first_active_index is not None:
+            lv.index = first_active_index
 
     def _build_items(self, sessions: list[tuple[SessionInfo, SessionState]]) -> list[ListItem]:
-        # Group by workspace
+        active = [(info, state) for info, state in sessions if not state.paused]
+        paused = [(info, state) for info, state in sessions if state.paused]
+
+        # Active sessions grouped by workspace
         groups: dict[str, list[tuple[SessionInfo, SessionState]]] = {}
-        for info, state in sessions:
+        for info, state in active:
             groups.setdefault(info.workspace, []).append((info, state))
 
         items: list[ListItem] = []
@@ -199,6 +275,13 @@ class SessionList(Widget):
             items.append(WorkspaceHeader(workspace))
             for info, state in groups[workspace]:
                 items.append(SessionRow(info, state))
+
+        # Paused sessions at the bottom, ungrouped
+        if paused:
+            items.append(PausedHeader())
+            for info, state in paused:
+                items.append(SessionRow(info, state))
+
         return items
 
     def get_selected_session(self) -> SessionInfo | None:
@@ -210,3 +293,11 @@ class SessionList(Widget):
         if isinstance(highlighted, SessionRow):
             return highlighted.session_info
         return None
+
+    def jump_to_paused(self) -> bool:
+        """Move cursor into the paused section. Returns True if any paused session exists."""
+        try:
+            lv = self.query_one("#session-listview", WrapListView)
+        except Exception:
+            return False
+        return lv.jump_to_first_paused()
