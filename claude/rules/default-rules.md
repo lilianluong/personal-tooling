@@ -5,6 +5,8 @@
 - Don't add comments, docstrings, or type annotations to code I didn't touch.
 - Don't add error handling or validation beyond what the task requires.
 
+- Never post comments or reviews on GitHub PRs unless explicitly asked. When asked to "comment on" or "respond to" PR comments, summarize or reply in the chat — do not post to GitHub.
+
 ## Git workflow
 
 - Use **Graphite** (`gt`) for stacked PR work; fall back to **git-branchless** only if `gt` is not available.
