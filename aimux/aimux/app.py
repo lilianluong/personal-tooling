@@ -218,9 +218,14 @@ class AimuxApp(App):
 
             def _on_confirm(confirmed: bool) -> None:
                 if confirmed:
-                    remove_worktree(worktree.path, worktree.repo_root)
-                    discover_workspaces(refresh=True)
-                    self._refresh_state()
+                    wt_path = worktree.path
+                    wt_root = worktree.repo_root
+
+                    def _do_remove() -> None:
+                        remove_worktree(wt_path, wt_root)
+                        discover_workspaces(refresh=True)
+
+                    self.run_worker(_do_remove, thread=True)
                 self.push_screen(KillWorktreePicker(), _on_worktree)
 
             self.push_screen(ConfirmKillWorktree(worktree, open_names, has_unstaged), _on_confirm)
