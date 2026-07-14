@@ -9,12 +9,14 @@ Use this skill when managing stacked PRs with Graphite (`gt`).
 
 Graphite tracks a stack of branches, each building on its parent. Each PR in a stack = one named branch with one cohesive commit (or small group of commits). Branches follow the convention `$TOOLING_USER/category/change` (e.g. `lilian/auth/add-model`).
 
+Graphite's auto-generated branch names (when `gt create` is run without an explicit name) slugify the whole commit message and collapse spaces/colons/slashes all into underscores — they cannot produce a `category/change` path. Always pass the branch name explicitly to get the right structure: `gt create -a -m "msg" $TOOLING_USER/category/change`.
+
 ## Key commands
 
 | Command | What it does |
 |---|---|
 | `gt state` | Show branch state as JSON — use this to understand stack structure |
-| `gt create -a -m "msg"` | Stage all changes, create a new branch, and commit |
+| `gt create -a -m "msg" $TOOLING_USER/category/change` | Stage all changes, create a new branch with an explicit name, and commit |
 | `gt modify -a` | Stage all changes and amend the current branch's commit |
 | `gt restack` | Rebase all upstack branches after modifying a commit |
 | `gt submit --stack` | Create or update all PRs in the stack |
@@ -25,7 +27,7 @@ Graphite tracks a stack of branches, each building on its parent. Each PR in a s
 ## Stacked PR workflow
 
 1. Start from trunk (main): `gt sync`
-2. For each PR in the stack: `gt create -a -m "commit message"`
+2. For each PR in the stack: `gt create -a -m "commit message" $TOOLING_USER/category/change`
 3. Check stack structure: `gt state`
 4. Push the stack: `gt submit --stack`
 

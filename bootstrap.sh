@@ -134,6 +134,7 @@ for rc in "$HOME/.zshrc" "$HOME/.bashrc"; do
 done
 
 # zsh-only: full path prompt, with hostname when SSH'd
+add_source_line "$HOME/.zshrc" "setopt PROMPT_SUBST"
 add_source_line "$HOME/.zshrc" "PROMPT='\${SSH_TTY:+%m:}%~ %# '"
 
 echo ""
