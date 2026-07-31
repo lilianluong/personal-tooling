@@ -59,6 +59,8 @@ def _apply_keybindings() -> None:
         ["bind-key", "-n", "M-d", "detach-client"],
         ["bind-key", "-n", "M-z", "run-shell", f"{aimux_bin} cycle prev --current #{{session_name}}"],
         ["bind-key", "-n", "M-x", "run-shell", f"{aimux_bin} cycle next --current #{{session_name}}"],
+        ["bind-key", "-T", "copy-mode", "MouseDragEnd1Pane", "send-keys", "-X", "copy-pipe-and-cancel", "pbcopy"],
+        ["bind-key", "-T", "copy-mode-vi", "MouseDragEnd1Pane", "send-keys", "-X", "copy-pipe-and-cancel", "pbcopy"],
     ]
     for binding in bindings:
         _tmux(binding)
