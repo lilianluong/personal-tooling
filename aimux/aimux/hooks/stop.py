@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Claude Code Stop hook — marks session as waiting, updates cost from transcript.
+"""Claude Code / Codex Stop hook — marks session as waiting, updates cost from transcript.
 
 Only runs when AIMUX_SESSION_ID is set (i.e., when launched by aimux).
 """
@@ -33,7 +33,7 @@ def main() -> None:
         state.input_tokens = usage["input_tokens"]
         state.output_tokens = usage["output_tokens"]
         state.cost_usd = usage["cost_usd"]
-        state.context_pct = context_pct(usage["context_input_tokens"], usage["model"])
+        state.context_pct = context_pct(usage["context_input_tokens"], usage["context_window"])
 
     state.status = "waiting"
     state.idle_since = time.time()

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Claude Code UserPromptSubmit hook — marks session as active.
+"""Claude Code / Codex UserPromptSubmit hook — marks session as active.
 
 Only runs when AIMUX_SESSION_ID is set (i.e., when launched by aimux).
 """

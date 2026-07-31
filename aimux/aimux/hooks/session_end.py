@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Claude Code SessionEnd hook — marks session as ended.
+"""Claude Code / Codex SessionEnd hook — marks session as ended.
 
 Only runs when AIMUX_SESSION_ID is set (i.e., when launched by aimux).
 """

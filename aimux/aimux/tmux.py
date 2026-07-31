@@ -25,7 +25,8 @@ _STATUS_OPTIONS: list[list[str]] = [
     ["set-option", "-g", "status-right", ""],
     ["set-option", "-g", "window-status-format", ""],
     ["set-option", "-g", "window-status-current-format", ""],
-    ["set-option", "-g", "mouse", "off"],
+    ["set-option", "-g", "mouse", "on"],
+    ["set-option", "-g", "history-limit", "50000"],
 ]
 
 

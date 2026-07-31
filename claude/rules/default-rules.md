@@ -4,6 +4,7 @@
 
 - Don't add comments, docstrings, or type annotations to code I didn't touch.
 - Don't add error handling or validation beyond what the task requires.
+- Code comments state what a thing *is*, in a short one-liner. Never explain *why* a decision was made and never narrate past design (what the code used to do, what was broken, what changed) — rationale and history go in the PR/commit, not the code.
 
 - Never post comments or reviews on GitHub PRs unless explicitly asked. When asked to "comment on" or "respond to" PR comments, summarize or reply in the chat — do not post to GitHub.
 

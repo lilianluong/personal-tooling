@@ -8,6 +8,7 @@ from textual.containers import Horizontal
 from textual.reactive import reactive
 from textual.widgets import Footer, Label, ListView, Static
 
+from aimux.agent import DEFAULT_AGENT
 from aimux.discovery import discover_workspaces
 from aimux.state import (
     SessionInfo,
@@ -44,14 +45,16 @@ class TopBar(Static):
     sessions_total: reactive[int] = reactive(0)
     sessions_waiting: reactive[int] = reactive(0)
     cost_today: reactive[float] = reactive(0.0)
+    agent: reactive[str] = reactive("claude")
 
     def render(self) -> str:
         waiting_str = ""
         if self.sessions_waiting:
             waiting_str = f"  •  👀 {self.sessions_waiting} waiting"
+        mode_str = f"  •  🤖 {self.agent} mode" if self.agent != "claude" else ""
         return (
             f"aimux  •  {self.sessions_total} sessions"
-            f"{waiting_str}"
+            f"{waiting_str}{mode_str}"
             f"  •  ${self.cost_today:.2f} today"
         )
 
@@ -89,6 +92,10 @@ class AimuxApp(App):
 
     _sessions: reactive[list[tuple[SessionInfo, SessionState]]] = reactive(list)
 
+    def __init__(self, agent: str = DEFAULT_AGENT) -> None:
+        super().__init__()
+        self._agent = agent
+
     def compose(self) -> ComposeResult:
         yield TopBar()
         yield Label(
@@ -102,6 +109,7 @@ class AimuxApp(App):
 
     def on_mount(self) -> None:
         apply_options_if_running()
+        self.query_one(TopBar).agent = self._agent
         self.query_one("#main-area").display = False
         self.set_interval(_REFRESH_INTERVAL, self._refresh_state)
         self._refresh_state()
@@ -171,14 +179,14 @@ class AimuxApp(App):
             def _on_name(name: str | None) -> None:
                 if not name:
                     return
-                spawn_worktree_session(str(workspace.path), name)
+                spawn_worktree_session(str(workspace.path), name, agent=self._agent)
                 self._attach(name)
             self.push_screen(WorktreeNamePrompt(workspace), _on_name)
 
         self.push_screen(WorkspacePicker(repos_only=True), _on_repo)
 
     def _spawn_session(self, workspace, name: str) -> None:
-        spawn_session(str(workspace.path), name)
+        spawn_session(str(workspace.path), name, agent=self._agent)
         self._attach(name)
 
     def _attach(self, session_id: str) -> None:

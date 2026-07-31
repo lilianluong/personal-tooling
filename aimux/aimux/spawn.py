@@ -7,6 +7,7 @@ import subprocess
 import time
 from pathlib import Path
 
+from aimux.agent import AGENT_COMMANDS, DEFAULT_AGENT
 from aimux.state import SessionInfo, register_session
 from aimux.tmux import create_session, ensure_server, send_keys
 
@@ -48,7 +49,7 @@ def remove_worktree(worktree_path: Path, repo_root: Path) -> None:
         subprocess.run(["git", "worktree", "prune"], cwd=repo_root, capture_output=True)
 
 
-def spawn_worktree_session(repo_path: str, name: str) -> SessionInfo:
+def spawn_worktree_session(repo_path: str, name: str, agent: str = DEFAULT_AGENT) -> SessionInfo:
     """Create a git worktree at ~/<name> with branch <tooling_user>/<name> and spawn a session."""
     branch = f"{get_tooling_user()}/{name}"
     worktree_path = Path.home() / name
@@ -57,20 +58,22 @@ def spawn_worktree_session(repo_path: str, name: str) -> SessionInfo:
         cwd=repo_path,
         check=True,
     )
-    return spawn_session(str(worktree_path), name)
+    return spawn_session(str(worktree_path), name, agent=agent)
 
 
-def spawn_session(workspace: str, name: str, prompt: str | None = None) -> SessionInfo:
-    """Create a new aimux session and start claude interactively.
+def spawn_session(
+    workspace: str, name: str, prompt: str | None = None, agent: str = DEFAULT_AGENT
+) -> SessionInfo:
+    """Create a new aimux session and start the agent interactively.
 
-    If *prompt* is given it is injected as keystrokes after claude starts,
+    If *prompt* is given it is injected as keystrokes after the agent starts,
     leaving the session open for follow-up interaction.
     """
     ensure_server()
     create_session(session_id=name, workspace=workspace, env={"AIMUX_SESSION_ID": name})
     info = SessionInfo(id=name, name=name, workspace=workspace, tmux_session=f"aimux-{name}")
     register_session(info)
-    send_keys(name, "claude --dangerously-skip-permissions")
+    send_keys(name, AGENT_COMMANDS[agent])
     if prompt:
         time.sleep(2.0)
         send_keys(name, prompt, enter=False)

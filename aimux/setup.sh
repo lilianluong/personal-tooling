@@ -75,3 +75,48 @@ with open(settings_path, "w") as f:
 print("  hooks registered in", settings_path)
 PYEOF
 green "  registered Claude Code hooks"
+
+# ── register hooks in ~/.codex/hooks.json ───────────────────────────────────
+
+CODEX_HOOKS="$HOME/.codex/hooks.json"
+
+mkdir -p "$(dirname "$CODEX_HOOKS")"
+[ -f "$CODEX_HOOKS" ] || echo '{}' > "$CODEX_HOOKS"
+
+python3 - "$CODEX_HOOKS" "$HOOK_PYTHON" <<'PYEOF'
+import json, sys
+
+hooks_path = sys.argv[1]
+hook_dir = sys.argv[2]
+
+with open(hooks_path) as f:
+    s = json.load(f)
+
+hooks = s.setdefault("hooks", {})
+
+def set_hook(event, script, matcher=None):
+    """Add aimux hook command if not already present (idempotent by command string)."""
+    cmd = f"python3 {hook_dir}/{script}"
+    entries = hooks.setdefault(event, [])
+    for entry in entries:
+        if isinstance(entry, dict) and entry.get("matcher") == matcher and entry.get("hooks"):
+            for h in entry["hooks"]:
+                if h.get("command") == cmd:
+                    return
+    entry = {"hooks": [{"type": "command", "command": cmd}]}
+    if matcher is not None:
+        entry["matcher"] = matcher
+    entries.append(entry)
+
+set_hook("SessionStart", "session_start.py", matcher="startup|resume|clear|compact")
+set_hook("Stop", "stop.py")
+set_hook("UserPromptSubmit", "prompt_submit.py")
+set_hook("SessionEnd", "session_end.py")
+
+with open(hooks_path, "w") as f:
+    json.dump(s, f, indent=2)
+    f.write("\n")
+
+print("  hooks registered in", hooks_path)
+PYEOF
+green "  registered Codex hooks"

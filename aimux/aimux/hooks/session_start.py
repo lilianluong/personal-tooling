@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Claude Code SessionStart hook — registers session with aimux state.
+"""Claude Code / Codex SessionStart hook — registers session with aimux state.
 
 Only runs when AIMUX_SESSION_ID is set (i.e., when launched by aimux).
 """
