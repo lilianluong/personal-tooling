@@ -1,0 +1,75 @@
+---
+name: write-voice-eval
+description: Write new eval scenarios for the LiveKit voice scheduling agent. Use when the user asks to add, expand, or improve eval coverage for agent behaviors like rescheduling, confirmation, cancellation, or scheduling.
+---
+
+Eval scenarios live in `livekit/evals/scenarios/`. Each file groups scenarios by workflow (e.g. `rescheduling.evals.test.ts`).
+
+## Anatomy of a scenario
+
+```typescript
+scenario.simulated(
+  "workflow.description-of-case",   // ID: prefix matches the file's workflow
+  {
+    setup: (mocks) => {             // configure mock responses
+      mockBookedAppointments(mocks, [DR_SMITH_BOOKED]);
+      mockAvailableSlots(mocks, [DR_SMITH_SLOT]);
+    },
+    userSim: {
+      goal: "...",                  // what the simulated user is trying to do
+      context: `${JOHN_SMITH_CONTEXT} ...`, // who the user is + scenario-specific detail
+      endCondition: "...",          // when the sim should stop
+      maxTurns: 8,                  // optional; default 12; use 8 for transfer/no-result paths
+    },
+  },
+  async (ctx) => {
+    // assertions — all run after the conversation ends
+    await ctx.assertToolCalled("toolName", { partialArgs });
+    await ctx.assertToolNotCalled("toolName");
+    await ctx.judgeTranscript({ role: "assistant", intent: "agent does X" });
+    await ctx.assert("label", () => helperFn(ctx.recorded.transcript));
+  }
+);
+```
+
+## Shared helpers (`evals/scenarios/helpers.ts`)
+
+**Fixtures** — use these instead of inline objects:
+- `JOHN_SMITH_CONTEXT` — base patient sentence for `userSim.context`
+- `JOHN_SMITH_LOOKUP` — expected `patientLookup` args
+- `DR_SMITH_BOOKED`, `DR_JONES_BOOKED` — booked appointment objects
+- `DR_SMITH_SLOT`, `DR_JONES_SLOT` — availability slot objects
+
+**Mock setup functions:**
+- `mockBookedAppointments(mocks, appointments[])`
+- `mockNoBookedAppointments(mocks)`
+- `mockAvailableSlots(mocks, slots[])`
+- `mockNoAvailableSlots(mocks)`
+- `mockPatientNotFound(mocks)` — makes `searchPatients` reject; triggers retry/transfer
+
+**Assertion helpers:**
+- `assertNoIneligibleLanguage(transcript)` — regex check; use via `ctx.assert`, not `judgeTranscript`
+
+## Which assertion to use
+
+| Situation | Use |
+|---|---|
+| Verify a tool was called (with optional args) | `ctx.assertToolCalled` |
+| Verify a tool was NOT called | `ctx.assertToolNotCalled` |
+| Check agent phrasing, tone, or semantic behavior | `ctx.judgeTranscript` |
+| Check for a specific literal word (e.g. "ineligible") | `ctx.assert` + regex helper |
+
+Prefer `ctx.judgeTranscript` over regex for semantic checks. Use `ctx.assert` + a regex helper only when checking for a specific forbidden/required word.
+
+## Conventions
+
+- **ID prefix** must match the file's workflow: `rescheduling.*`, `confirmation.*`, `cancellation.*`, etc.
+- **No `scoreThreshold`** — omit it; the default 1.0 is fine, evals are expected to show real signal.
+- **`maxTurns: 8`** on any scenario where the agent is expected to hit a dead end (no slots, no appointments, patient not found) — prevents timeout when the user keeps re-asking.
+- **`endCondition`** should describe a concrete observable outcome ("The agent transfers you"), not a process ("The agent tries to find an appointment").
+- For multi-appointment scenarios, spread `appointmentDatetime` so they're clearly distinct dates.
+- When overriding only one field of a fixture, use spread: `{ ...DR_JONES_BOOKED, appointmentDatetime: "..." }`.
+
+## Adding to an existing file
+
+Read the file first to understand existing coverage, then add the new scenario at the logical position (group by outcome type: happy path → edge cases → transfers/errors).
