@@ -163,11 +163,45 @@ path = sys.argv[1]
 with open(path) as f:
     s = json.load(f)
 s['statusLine'] = {'type': 'command', 'command': 'bash ~/.claude/statusline-command.sh'}
+
+commit_audit_hook = {
+    'matcher': 'Bash',
+    'hooks': [
+        {
+            'type': 'agent',
+            'if': 'Bash(git commit *)',
+            'prompt': (
+                "About to run a git commit. Run `git diff --cached` to see the staged changes. "
+                "Audit every newly added comment (an added line, prefixed with '+', that is a code "
+                "comment) in that diff. Each comment should be a short, concrete description of "
+                "*what* the code does — generally 1-2 lines. Flag any comment that instead explains "
+                "*why* a decision was made, narrates history (what the code used to do, what changed, "
+                "what was broken), or runs longer than ~2 lines. If any new comment violates this, "
+                "block and list the offending file, line, and comment text with a one-line note on "
+                "the issue so it can be fixed before committing. If there are no new comments, or all "
+                "of them already comply, allow the commit."
+            ),
+            'timeout': 60,
+            'statusMessage': 'Auditing new comments before commit...',
+        }
+    ],
+}
+pre_tool_use = s.setdefault('hooks', {}).setdefault('PreToolUse', [])
+for i, entry in enumerate(pre_tool_use):
+    if entry.get('matcher') == 'Bash' and any(
+        h.get('type') == 'agent' and h.get('if') == 'Bash(git commit *)'
+        for h in entry.get('hooks', [])
+    ):
+        pre_tool_use[i] = commit_audit_hook
+        break
+else:
+    pre_tool_use.append(commit_audit_hook)
+
 with open(path, 'w') as f:
     json.dump(s, f, indent=2)
     f.write('\n')
 EOF
-green "  configured statusLine in $CLAUDE_SETTINGS"
+green "  configured statusLine and commit comment-audit hook in $CLAUDE_SETTINGS"
 
 echo ""
 

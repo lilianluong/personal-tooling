@@ -42,6 +42,8 @@ Status/cost/token tracking works the same way for codex sessions (see [Codex hoo
 | `Enter` | Attach to selected session |
 | `n` | New session (workspace picker → name prompt) |
 | `k` | Kill session (with confirmation) |
+| `c` | Kill worktree (with confirmation) |
+| `C` | Kill all worktrees with no live session attached (with confirmation) |
 | `q` / `Esc` | Quit aimux (sessions keep running) |
 
 ### In-session hotkeys (no prefix needed)

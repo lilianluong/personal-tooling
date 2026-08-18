@@ -188,3 +188,69 @@ class ConfirmKillWorktree(ModalScreen[bool]):
     def action_confirm(self) -> None:
         if not self._blocked:
             self.dismiss(True)
+
+
+class ConfirmKillAllWorktrees(ModalScreen[bool]):
+    """Confirm bulk removal of worktrees with no live session attached."""
+
+    DEFAULT_CSS = """
+    ConfirmKillAllWorktrees {
+        align: center middle;
+    }
+
+    ConfirmKillAllWorktrees > Static {
+        width: 70;
+        max-height: 24;
+        background: $surface;
+        border: solid $error;
+        padding: 1 2;
+    }
+
+    ConfirmKillAllWorktrees #title {
+        text-style: bold;
+        color: $error;
+        margin-bottom: 1;
+    }
+
+    ConfirmKillAllWorktrees #wt-list {
+        color: $text-muted;
+        margin-bottom: 1;
+    }
+
+    ConfirmKillAllWorktrees #btn-row {
+        layout: horizontal;
+        height: 3;
+        align-horizontal: right;
+    }
+
+    ConfirmKillAllWorktrees Button {
+        margin-left: 1;
+    }
+    """
+
+    BINDINGS = [
+        Binding("escape", "cancel", "Cancel"),
+        Binding("y", "confirm", "Yes"),
+    ]
+
+    def __init__(self, worktrees: list[Workspace]) -> None:
+        super().__init__()
+        self.worktrees = worktrees
+
+    def compose(self) -> ComposeResult:
+        with Static():
+            yield Label(f"Remove {len(self.worktrees)} orphaned worktree(s)?", id="title")
+            paths = "\n".join(f"  {wt.display}" for wt in self.worktrees)
+            yield Label(paths, id="wt-list")
+            with Static(id="btn-row"):
+                yield Button("Cancel", variant="default", id="btn-cancel")
+                yield Button("Yes, remove all", variant="error", id="btn-yes")
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        self.dismiss(event.button.id == "btn-yes")
+
+    def action_cancel(self) -> None:
+        self.dismiss(False)
+
+    def action_confirm(self) -> None:
+        self.dismiss(True)

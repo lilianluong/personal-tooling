@@ -20,10 +20,10 @@ from aimux.state import (
     toggle_pause_session,
 )
 from aimux.spawn import check_worktree_has_unstaged, remove_worktree, spawn_session, spawn_worktree_session
-from aimux.tmux import attach_session, kill_session, apply_options_if_running
+from aimux.tmux import attach_session, kill_session, apply_options_if_running, session_exists
 from aimux.widgets.confirm_kill import ConfirmKill
 from aimux.widgets.detail_panel import DetailPanel
-from aimux.widgets.kill_worktree import ConfirmKillWorktree, KillWorktreePicker
+from aimux.widgets.kill_worktree import ConfirmKillAllWorktrees, ConfirmKillWorktree, KillWorktreePicker
 from aimux.widgets.new_session import SessionNamePrompt, WorkspacePicker, WorktreeNamePrompt
 from aimux.widgets.session_list import SessionList, SessionRow
 
@@ -69,6 +69,7 @@ class AimuxApp(App):
         Binding("w", "new_worktree", "Worktree"),
         Binding("k", "kill_session", "Kill"),
         Binding("c", "kill_worktree", "Kill WT"),
+        Binding("C", "kill_orphaned_worktrees", "Kill Orphan WTs"),
         Binding("p", "toggle_pause", "Pause"),
         Binding("u", "focus_paused", "Paused"),
     ]
@@ -239,6 +240,32 @@ class AimuxApp(App):
             self.push_screen(ConfirmKillWorktree(worktree, open_names, has_unstaged), _on_confirm)
 
         self.push_screen(KillWorktreePicker(), _on_worktree)
+
+    def action_kill_orphaned_worktrees(self) -> None:
+        live_workspaces = {
+            info.workspace
+            for info in list_sessions()
+            if get_session_state(info.id).status != "ended" and session_exists(info.id)
+        }
+        worktrees = [w for w in discover_workspaces(refresh=True) if w.is_worktree]
+        orphaned = [w for w in worktrees if str(w.path) not in live_workspaces]
+
+        if not orphaned:
+            self.notify("No orphaned worktrees to kill.")
+            return
+
+        def _on_confirm(confirmed: bool) -> None:
+            if not confirmed:
+                return
+
+            def _do_remove() -> None:
+                for wt in orphaned:
+                    remove_worktree(wt.path, wt.repo_root)
+                discover_workspaces(refresh=True)
+
+            self.run_worker(_do_remove, thread=True)
+
+        self.push_screen(ConfirmKillAllWorktrees(orphaned), _on_confirm)
 
     def action_toggle_pause(self) -> None:
         try:
