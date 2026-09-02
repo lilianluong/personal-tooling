@@ -72,10 +72,13 @@ def _walk(directory: Path, depth: int, result: set[Path]) -> None:
     except PermissionError:
         return
 
-    has_git = any(e.name == ".git" for e in entries)
-    if has_git:
+    git_path = directory / ".git"
+    if git_path.is_dir():
         result.add(directory)
         return  # don't descend further into a repo (worktrees handled separately)
+    if git_path.is_file():
+        # Linked worktree; its main repo's scan already covers it.
+        return
 
     for entry in entries:
         if not entry.is_dir() or entry.is_symlink():

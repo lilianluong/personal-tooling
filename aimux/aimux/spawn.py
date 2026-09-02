@@ -38,6 +38,10 @@ def check_worktree_has_unstaged(path: Path) -> bool:
 
 
 def remove_worktree(worktree_path: Path, repo_root: Path) -> None:
+    if not repo_root.is_dir():
+        shutil.rmtree(worktree_path, ignore_errors=True)
+        return
+
     result = subprocess.run(
         ["git", "worktree", "remove", "--force", str(worktree_path)],
         cwd=repo_root,
