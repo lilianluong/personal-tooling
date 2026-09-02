@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from textual.app import ComposeResult
 from textual.binding import Binding
+from textual.containers import VerticalScroll
 from textual.screen import ModalScreen
 from textual.widgets import Button, Input, Label, ListItem, ListView, Static
 
@@ -212,9 +213,13 @@ class ConfirmKillAllWorktrees(ModalScreen[bool]):
         margin-bottom: 1;
     }
 
+    ConfirmKillAllWorktrees #wt-list-scroll {
+        max-height: 14;
+        margin-bottom: 1;
+    }
+
     ConfirmKillAllWorktrees #wt-list {
         color: $text-muted;
-        margin-bottom: 1;
     }
 
     ConfirmKillAllWorktrees #btn-row {
@@ -241,7 +246,8 @@ class ConfirmKillAllWorktrees(ModalScreen[bool]):
         with Static():
             yield Label(f"Remove {len(self.worktrees)} orphaned worktree(s)?", id="title")
             paths = "\n".join(f"  {wt.display}" for wt in self.worktrees)
-            yield Label(paths, id="wt-list")
+            with VerticalScroll(id="wt-list-scroll"):
+                yield Label(paths, id="wt-list")
             with Static(id="btn-row"):
                 yield Button("Cancel", variant="default", id="btn-cancel")
                 yield Button("Yes, remove all", variant="error", id="btn-yes")
